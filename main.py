@@ -83,6 +83,25 @@ def push_repo(repo_name, path):
     run_cmd('git commit -m "Auto commit from LLM deployment"', cwd=path)
     run_cmd("git push -u origin main --force", cwd=path)
 
+def enable_github_pages(repo_name):
+    """Enable GitHub Pages source for the repo via GitHub API."""
+    url = f"https://api.github.com/repos/{USERNAME}/{repo_name}/pages"
+    headers = {
+        "Authorization": f"token {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github+json"
+    }
+    data = {
+        "source": {"branch": "main", "path": "/"}
+    }
+    response = requests.post(url, headers=headers, json=data)
+    if response.status_code in (201, 204):
+        print(f"GitHub Pages enabled for {repo_name}")
+    elif response.status_code == 409:
+        print("Pages already enabled or branch missing yet.")
+    else:
+        print(f"Failed to enable pages: {response.status_code} {response.text}")
+
+
 @app.get("/")
 async def root():
     return {"message": "API running. Use POST /api-endpoint to submit tasks."}
@@ -109,6 +128,7 @@ async def handle_request(req: Request):
     try:
         build_files(temp_dir, task, brief, round_num)
         push_repo(task, temp_dir)
+        enable_github_pages(task)
 
         repo_url = f"https://github.com/{USERNAME}/{task}"
         pages_url = f"https://{USERNAME}.github.io/{task}/"
