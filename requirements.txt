@@ -1,4 +1,8 @@
 fastapi
-uvicorn
+uvicorn[standard]
 pydantic
-requests
+httpx
+GitPython
+python-dotenv
+pydantic[email]
+pydantic-settings
